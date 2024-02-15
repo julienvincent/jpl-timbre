@@ -1,6 +1,9 @@
 clean:
     clojure -T:build clean 
 
+prep:
+    clojure -T:build prep
+
 build:
     clojure -T:build build
 

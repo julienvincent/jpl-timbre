@@ -1,5 +1,6 @@
 (ns build
   (:require
+   [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.build.api :as b]
    [deps-deploy.deps-deploy :as deps-deploy]))
@@ -18,6 +19,19 @@
 (defn compile-module-info [_]
   (b/javac {:src-dirs [class-dir-build]
             :class-dir class-dir-build
+            :basis @basis
+            :javac-opts ["-Xlint:-options"]}))
+
+(defn prep [_]
+  (.mkdir (io/file "classes"))
+
+  (b/compile-clj {:basis @basis
+                  :class-dir "classes"
+                  :ns-compile ['io.julienvincent.jpl-timbre.logger
+                               'io.julienvincent.jpl-timbre.logger-finder]})
+
+  (b/javac {:src-dirs ["src" "classes"]
+            :class-dir "classes"
             :basis @basis
             :javac-opts ["-Xlint:-options"]}))
 
