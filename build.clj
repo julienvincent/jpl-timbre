@@ -8,15 +8,16 @@
 
 (def lib 'io.julienvincent/jpl-timbre)
 (def version (str/replace (or (System/getenv "VERSION") "0.0.0") #"v" ""))
-(def class-dir "target/classes")
+(def class-dir-build "target/build")
+(def class-dir-release "target/release")
 (def jar-file "target/lib.jar")
 
 (defn clean [_]
   (b/delete {:path "target"}))
 
 (defn compile-module-info [_]
-  (b/javac {:src-dirs ["src" "target/classes"]
-            :class-dir class-dir
+  (b/javac {:src-dirs [class-dir-build]
+            :class-dir class-dir-build
             :basis @basis
             :javac-opts ["-Xlint:-options"]}))
 
@@ -24,16 +25,25 @@
   (clean nil)
 
   (b/compile-clj {:basis @basis
-                  :class-dir class-dir
+                  :class-dir class-dir-build
                   :ns-compile ['io.julienvincent.jpl-timbre.logger
                                'io.julienvincent.jpl-timbre.logger-finder]})
 
+  (b/copy-dir {:src-dirs ["src" "resources"]
+               :target-dir class-dir-build})
+
   (compile-module-info nil)
 
-  (b/copy-dir {:src-dirs ["resources"]
-               :target-dir class-dir})
+  (b/copy-dir {:src-dirs ["src" "resources"]
+               :target-dir class-dir-release})
 
-  (b/write-pom {:class-dir class-dir
+  (b/copy-dir {:src-dirs [(str class-dir-build "/io/julienvincent")]
+               :target-dir (str class-dir-release "/io/julienvincent")})
+
+  (b/copy-file {:src (str class-dir-build "/module-info.class")
+                :target (str class-dir-release "/module-info.class")})
+
+  (b/write-pom {:class-dir class-dir-release
                 :lib lib
                 :version version
                 :basis @basis
@@ -45,7 +55,7 @@
                              [:name "MIT"]
                              [:url "https://opensource.org/license/mit"]]]]})
 
-  (b/jar {:class-dir class-dir
+  (b/jar {:class-dir class-dir-release
           :jar-file jar-file}))
 
 (defn install [_]
@@ -53,10 +63,10 @@
               :lib lib
               :version version
               :jar-file jar-file
-              :class-dir class-dir}))
+              :class-dir class-dir-release}))
 
 (defn release [_]
   (deps-deploy/deploy {:installer :remote
                        :artifact (b/resolve-path jar-file)
                        :pom-file (b/pom-path {:lib lib
-                                              :class-dir class-dir})}))
+                                              :class-dir class-dir-release})}))
