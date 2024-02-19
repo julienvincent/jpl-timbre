@@ -9,18 +9,12 @@
 
 (def lib 'io.julienvincent/jpl-timbre)
 (def version (str/replace (or (System/getenv "VERSION") "0.0.0") #"v" ""))
-(def class-dir-build "target/build")
-(def class-dir-release "target/release")
+(def class-dir "target/classes")
 (def jar-file "target/lib.jar")
 
 (defn clean [_]
+  (b/delete {:path "classes"})
   (b/delete {:path "target"}))
-
-(defn compile-module-info [_]
-  (b/javac {:src-dirs [class-dir-build]
-            :class-dir class-dir-build
-            :basis @basis
-            :javac-opts ["-Xlint:-options"]}))
 
 (defn prep [_]
   (.mkdir (io/file "classes"))
@@ -28,7 +22,8 @@
   (b/compile-clj {:basis @basis
                   :class-dir "classes"
                   :ns-compile ['io.julienvincent.jpl-timbre.logger
-                               'io.julienvincent.jpl-timbre.logger-finder]})
+                               'io.julienvincent.jpl-timbre.logger-finder]
+                  :filter-nses ['io.julienvincent]})
 
   (b/javac {:src-dirs ["src" "classes"]
             :class-dir "classes"
@@ -39,19 +34,20 @@
   (clean nil)
 
   (b/compile-clj {:basis @basis
-                  :class-dir class-dir-build
+                  :class-dir class-dir
                   :ns-compile ['io.julienvincent.jpl-timbre.logger
-                               'io.julienvincent.jpl-timbre.logger-finder]})
+                               'io.julienvincent.jpl-timbre.logger-finder]
+                  :filter-nses ['io.julienvincent]})
 
   (b/copy-dir {:src-dirs ["src" "resources"]
-               :target-dir class-dir-build})
+               :target-dir class-dir})
 
-  (compile-module-info nil)
+  (b/javac {:src-dirs [class-dir]
+            :class-dir class-dir
+            :basis @basis
+            :javac-opts ["-Xlint:-options"]})
 
-  (b/copy-dir {:src-dirs ["src" "resources"]
-               :target-dir class-dir-build})
-
-  (b/write-pom {:class-dir class-dir-build
+  (b/write-pom {:class-dir class-dir
                 :lib lib
                 :version version
                 :basis @basis
@@ -63,7 +59,7 @@
                              [:name "MIT"]
                              [:url "https://opensource.org/license/mit"]]]]})
 
-  (b/jar {:class-dir class-dir-build
+  (b/jar {:class-dir class-dir
           :jar-file jar-file}))
 
 (defn install [_]
@@ -71,10 +67,10 @@
               :lib lib
               :version version
               :jar-file jar-file
-              :class-dir class-dir-build}))
+              :class-dir class-dir}))
 
 (defn release [_]
   (deps-deploy/deploy {:installer :remote
                        :artifact (b/resolve-path jar-file)
                        :pom-file (b/pom-path {:lib lib
-                                              :class-dir class-dir-build})}))
+                                              :class-dir class-dir})}))
