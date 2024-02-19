@@ -17,6 +17,7 @@
   (b/delete {:path "target"}))
 
 (defn prep [_]
+  (clean nil)
   (.mkdir (io/file "classes"))
 
   (b/compile-clj {:basis @basis

@@ -30,8 +30,7 @@
   (boolean (timbre/may-log? (system-level->timbre-level level)
                             (.getName this))))
 
-(defn -log [^io.julienvincent.jpl_timbre.Logger this & [level bundle message]]
-  (let [message (or message bundle)]
-    (timbre/log! (system-level->timbre-level level)
-                 :p [message]
-                 {:?ns-str (:name (.state this))})))
+(defn -log [^io.julienvincent.jpl_timbre.Logger this & [level & args]]
+  (timbre/log! (system-level->timbre-level level)
+               :p args
+               {:?ns-str (:name (.state this))}))
