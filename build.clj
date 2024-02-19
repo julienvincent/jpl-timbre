@@ -49,15 +49,9 @@
   (compile-module-info nil)
 
   (b/copy-dir {:src-dirs ["src" "resources"]
-               :target-dir class-dir-release})
+               :target-dir class-dir-build})
 
-  (b/copy-dir {:src-dirs [(str class-dir-build "/io/julienvincent")]
-               :target-dir (str class-dir-release "/io/julienvincent")})
-
-  (b/copy-file {:src (str class-dir-build "/module-info.class")
-                :target (str class-dir-release "/module-info.class")})
-
-  (b/write-pom {:class-dir class-dir-release
+  (b/write-pom {:class-dir class-dir-build
                 :lib lib
                 :version version
                 :basis @basis
@@ -69,7 +63,7 @@
                              [:name "MIT"]
                              [:url "https://opensource.org/license/mit"]]]]})
 
-  (b/jar {:class-dir class-dir-release
+  (b/jar {:class-dir class-dir-build
           :jar-file jar-file}))
 
 (defn install [_]
@@ -77,10 +71,10 @@
               :lib lib
               :version version
               :jar-file jar-file
-              :class-dir class-dir-release}))
+              :class-dir class-dir-build}))
 
 (defn release [_]
   (deps-deploy/deploy {:installer :remote
                        :artifact (b/resolve-path jar-file)
                        :pom-file (b/pom-path {:lib lib
-                                              :class-dir class-dir-release})}))
+                                              :class-dir class-dir-build})}))
