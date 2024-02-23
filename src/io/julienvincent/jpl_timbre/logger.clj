@@ -27,10 +27,12 @@
   (:name (.state this)))
 
 (defn -isLoggable [^io.julienvincent.jpl_timbre.Logger this level]
-  (boolean (timbre/may-log? (system-level->timbre-level level)
-                            (.getName this))))
+  (let [name (-getName this)]
+    (boolean
+     (when-not (= "java.lang.Runtime" name)
+       (timbre/may-log? (system-level->timbre-level level) name)))))
 
 (defn -log [^io.julienvincent.jpl_timbre.Logger this & [level & args]]
   (timbre/log! (system-level->timbre-level level)
                :p args
-               {:?ns-str (:name (.state this))}))
+               {:?ns-str (-getName this)}))
