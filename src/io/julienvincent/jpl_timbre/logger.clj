@@ -29,7 +29,7 @@
 (defn -isLoggable [^io.julienvincent.jpl_timbre.Logger this level]
   (let [name (-getName this)]
     (boolean
-     (when-not (= "java.lang.Runtime" name)
+     (when-not (re-matches #"java\.lang\..*" name)
        (timbre/may-log? (system-level->timbre-level level) name)))))
 
 (defn -log [^io.julienvincent.jpl_timbre.Logger this & [level & args]]
